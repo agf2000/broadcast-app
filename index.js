@@ -1,28 +1,24 @@
-var express = require('express');
-var app = express();
-var expressWs = require('express-ws')(app);
+var app = require('express')();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+var port = process.env.PORT || 3000;
 
+// socket.io midleware
 app.use(function (req, res, next) {
-    console.log('middleware');
-    req.testing = 'testing';
-    return next();
+    res.io = io;
+    next();
 });
 
-// Loggedin user array
-const loggedInUsers = {};
-app.locals.loggedInUsers = loggedInUsers;
+// app.get('/', function (req, res) {
+//     res.send('Hello there');
+// });
 
-app.get('/', function (req, res, next) {
-    console.log('get route', req.testing);
-    res.end();
-});
-
-app.ws('/', function (ws, req) {
-    ws.on('message', function (msg) {
-        console.log(msg);
-        ws.send(msg);
+io.on('connection', function (socket) {
+    socket.on('messages', function (msg) {
+        io.emit('messages', msg);
     });
-    console.log('socket', req.testing);
 });
 
-app.listen(3000);
+http.listen(port, function () {
+    console.log('listening on *:' + port);
+});
